@@ -10,11 +10,14 @@ class TaskBase(BaseModel):
     description: Optional[str] = None
     status: str = "New"
     priority: str = "Medium"
-    tag: str = "Розробка" 
+    tag: str = "Розробка"
     deadline: Optional[datetime] = None
 
 class TaskCreate(TaskBase):
-    pass 
+    project_id: Optional[int] = None
+
+class TaskUpdateStatus(BaseModel):
+    status: str
 
 class Task(TaskBase):
     id: int
@@ -23,9 +26,6 @@ class Task(TaskBase):
 
     class Config:
         from_attributes = True
-
-class TaskUpdateStatus(BaseModel):
-    status: str
 
 # ==========================================
 # 2. СХЕМИ ПРОЄКТІВ (Projects)
@@ -37,11 +37,19 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     pass
 
+# Схема для приєднання до проєкту за кодом
+class ProjectJoin(BaseModel):
+    invite_code: str
+
 class Project(ProjectBase):
     id: int
+    invite_code: str
     created_at: datetime
-    owner_id: Optional[int] = None
-    tasks: List[Task] = [] 
+    owner_id: int
+    
+    # Використовуємо string-формат для Tasks, щоб уникнути помилок циклічного імпорту, 
+    # якщо Pydantic буде суворо перевіряти типи
+    tasks: List["Task"] = []
 
     class Config:
         from_attributes = True
@@ -55,9 +63,8 @@ class UserBase(BaseModel):
     role: str = "Учасник команди"
 
 class UserCreate(UserBase):
-    password: str 
+    password: str
 
-# НОВИЙ КЛАС ДЛЯ ЛОГІНУ (саме його не вистачало для main.py)
 class UserLogin(BaseModel):
     username: str
     password: str

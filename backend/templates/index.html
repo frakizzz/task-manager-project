@@ -3,124 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeamTasker Pro — Організуй свій хаос</title>
+    <title>Tasker_OS // INITIALIZE</title>
     <style>
-        /* Стилістика в дусі концепту Nothing */
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
         :root {
-            --bg: #000000;
-            --fg: #ffffff;
-            --muted: #666666;
-            --border: #222222;
-            --accent: #ff0000; /* Фірмова червона крапка Nothing */
+            --bg-deep: #000000;       
+            --bg-card: #0a0a0a;       
+            --text-main: #ffffff;
+            --text-muted: #555555;
+            --border-color: #222222;  
+            --accent-red: #ff0000;    
+            --tech-font: 'Space Mono', monospace;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Space Mono', monospace; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--tech-font); }
 
-        body {
-            background-color: var(--bg);
-            color: var(--fg);
+        body { 
+            background-color: var(--bg-deep); 
+            color: var(--text-main); 
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
-            justify-content: space-between;
+            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
             overflow-x: hidden;
         }
 
-        /* Навігація */
-        header {
+        nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 30px;
-            border-bottom: 1px solid var(--border);
+            padding: 30px 50px;
+            border-bottom: 1px solid var(--border-color);
         }
-        .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: -1px; text-transform: uppercase; }
-        .logo span { color: var(--accent); }
 
-        /* Головний контент */
-        main {
+        .logo { font-size: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: -1px; }
+        .logo span { color: var(--accent-red); animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 30px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-main); }
+
+        .hero {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 40px 20px;
-            flex: 1;
+            align-items: flex-start;
+            padding: 0 10vw;
+            position: relative;
         }
 
-        .hero-title {
-            font-size: calc(2rem + 2vw);
-            font-weight: 400;
+        .sys-status {
+            color: var(--accent-red);
+            font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: -2px;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sys-status::before {
+            content: ''; display: block; width: 8px; height: 8px; background-color: var(--accent-red);
+        }
+
+        .typewriter h1 {
+            font-size: 4.5rem;
+            text-transform: uppercase;
+            font-weight: 700;
             line-height: 1.1;
             margin-bottom: 20px;
-            max-width: 900px;
+            letter-spacing: -2px;
+            overflow: hidden; 
+            border-right: .15em solid var(--text-main); 
+            white-space: nowrap; 
+            animation: typing 2s steps(30, end), blink-caret .75s step-end infinite;
         }
 
-        .hero-subtitle {
-            color: var(--muted);
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--text-main); } }
+
+        .hero-desc {
+            max-width: 600px;
+            color: var(--text-muted);
             font-size: 1rem;
-            max-width: 500px;
+            line-height: 1.6;
             margin-bottom: 40px;
-            line-height: 1.5;
         }
 
-        /* Стильна кнопка */
-        .btn-start {
-            background-color: var(--fg);
-            color: var(--bg);
-            text-decoration: none;
-            padding: 15px 40px;
+        .btn-tech {
+            background-color: var(--text-main);
+            color: var(--bg-deep);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
             font-weight: 700;
-            border-radius: 50px;
             text-transform: uppercase;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            border: 1px solid var(--fg);
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
             display: inline-block;
         }
-        .btn-start:hover {
-            background-color: var(--bg);
-            color: var(--fg);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        .btn-tech:hover {
+            background-color: var(--accent-red);
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
         }
 
-        /* Футер */
-        footer {
-            padding: 30px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.8rem;
-            border-top: 1px solid var(--border);
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1px;
+            background-color: var(--border-color);
+            border-top: 1px solid var(--border-color);
         }
 
-        /* Адаптивність для телефонів */
-        @media (max-width: 600px) {
-            header { padding: 20px; }
-            .hero-title { letter-spacing: -1px; }
-            .btn-start { width: 100%; text-align: center; }
+        .feature-card {
+            background-color: var(--bg-card);
+            padding: 40px;
+            position: relative;
         }
+        
+        .feature-card::before {
+            content: ''; position: absolute; top: 20px; left: 20px; width: 15px; height: 15px; 
+            border-top: 2px solid var(--text-muted); border-left: 2px solid var(--text-muted);
+        }
+
+        .feature-num { color: var(--accent-red); font-size: 0.8rem; margin-bottom: 15px; }
+        .feature-title { font-size: 1.2rem; text-transform: uppercase; font-weight: 700; margin-bottom: 15px; }
+        .feature-desc { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
+
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">TeamTasker<span>.</span>Pro</div>
-        <div style="color: var(--muted); font-size: 0.8rem;">v1.0.0_OS</div>
-    </header>
+    <nav>
+        <div class="logo">Tasker<span>_</span>OS</div>
+        <div class="nav-links">
+            <a href="https://github.com" target="_blank">DOCS</a>
+            {% if current_user %}
+                <a href="/hub" style="color: var(--accent-red); font-weight: 700;">[ ENTER_HUB ]</a>
+            {% else %}
+                <a href="/login" style="color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--text-main); padding-bottom: 2px;">[ SYS_LOGIN ]</a>
+            {% endif %}
+        </div>
+    </nav>
 
-    <main>
-        <h1 class="hero-title">Capture. Organize. Tackle.</h1>
-        <p class="hero-subtitle">Інтенсивний інструмент для управління технічними задачами та розробкою софту. Без зайвого шуму.</p>
-        <a href="/board" class="btn-start">Відкрити дошку -></a>
-    </main>
+    <div class="hero">
+        <div class="sys-status">System Online // v2.1.0</div>
+        <div class="typewriter">
+            <h1>Hybrid<br>Workspace<br>Engine.</h1>
+        </div>
+        <p class="hero-desc">
+            Професійне середовище для управління проєктами. Поєднує гнучкість Канбан-дошок зі строгістю навчальних та інженерних хабів. Жодних зайвих деталей. Тільки чиста продуктивність.
+        </p>
+        {% if current_user %}
+            <a href="/hub" class="btn-tech">[ RESUME_SESSION ]</a>
+        {% else %}
+            <a href="/login" class="btn-tech">[ INITIALIZE_SESSION ]</a>
+        {% endif %}
+    </div>
 
-    <footer>
-        <p>© 2026 TeamTasker Project. Натхненно мінімалізмом.</p>
-    </footer>
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-num">01 // ARCHITECTURE</div>
+            <div class="feature-title">Ізольовані Хаби</div>
+            <div class="feature-desc">Створюйте окремі простори для кожного проєкту. Доступ лише за унікальними інвайт-кодами. Повна конфіденційність даних вашої команди.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">02 // WORKFLOW</div>
+            <div class="feature-title">Agile Board</div>
+            <div class="feature-desc">Керуйте задачами за допомогою системи Drag & Drop. Змінюйте пріоритети, теги та статуси в режимі реального часу без перезавантаження.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-num">03 // DESIGN</div>
+            <div class="feature-title">Брутальний UX</div>
+            <div class="feature-desc">Максимальна концентрація на задачах завдяки мінімалістичному термінальному інтерфейсу. Темна тема береже очі під час нічних компіляцій.</div>
+        </div>
+    </div>
 
 </body>
 </html>
