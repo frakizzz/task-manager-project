@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeamTasker OS — AUTH_MODULE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-deep: #000000;
+            --bg-panel: #0a0a0a;
+            --text-main: #ffffff;
+            --text-muted: #555555;
+            --border-color: #222222;
+            --accent-red: #ff0000;
+            --tech-font: 'Space Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--tech-font); }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            position: relative;
+        }
+
+        .auth-container::before, .auth-container::after {
+            content: ''; position: absolute; width: 10px; height: 10px; border: 1px solid var(--text-muted);
+        }
+        .auth-container::before { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+        .auth-container::after { bottom: 5px; right: 5px; border-left: none; border-top: none; }
+
+        .auth-header { text-align: center; margin-bottom: 30px; border-bottom: 1px dashed var(--border-color); padding-bottom: 20px; }
+        .auth-header h1 { font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; }
+        .auth-header span { color: var(--accent-red); }
+
+        .auth-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; }
+        .input-group input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border-color); color: var(--text-main); padding: 10px 0; font-size: 1rem; outline: none; transition: 0.3s; }
+        .input-group input:focus { border-bottom-color: var(--text-main); }
+
+        .btn-tech { width: 100%; background-color: var(--text-main); color: var(--bg-deep); border: none; padding: 15px; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-tech:hover { background-color: var(--text-muted); color: var(--text-main); }
+
+        .switch-mode { text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); }
+        .switch-mode a { color: var(--text-main); text-decoration: none; border-bottom: 1px solid transparent; cursor: pointer; transition: 0.2s; }
+        .switch-mode a:hover { border-bottom-color: var(--text-main); }
+
+        #registerBlock { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>SYS_AUTH<span>.</span></h1>
+            <div class="auth-meta" id="statusText">Очікування підключення...</div>
+        </div>
+
+        <div id="loginBlock">
+            <div class="input-group">
+                <label>USERNAME_</label>
+                <input type="text" id="loginUsername" placeholder="Введіть логін" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label>PASSWORD_</label>
+                <input type="password" id="loginPassword" placeholder="Введіть пароль">
+            </div>
+            <button class="btn-tech" onclick="handleLogin()">[ УВІЙТИ ]</button>
+            <div class="switch-mode">
+                Немає доступу? <a onclick="toggleMode()">Запит нового акаунту</a>
+            </div>
+        </div>
+
+        <div id="registerBlock">
+            <div class="input-group">
+                <label>NEW_USERNAME_</label>
+                <input type="text" id="regUsername" placeholder="Вигадайте логін" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label>EMAIL_</label>
+                <input type="email" id="regEmail" placeholder="your@email.com">
+            </div>
+            <div class="input-group">
+                <label>NEW_PASSWORD_</label>
+                <input type="password" id="regPassword" placeholder="Мінімум 6 символів">
+            </div>
+            <button class="btn-tech" style="background-color: transparent; border: 1px solid white; color: white;" onclick="handleRegister()">[ СТВОРИТИ ]</button>
+            <div class="switch-mode">
+                Вже маєте ключ? <a onclick="toggleMode()">Повернутись до входу</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+
+        function toggleMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('loginBlock').style.display = isLoginMode ? 'block' : 'none';
+            document.getElementById('registerBlock').style.display = isLoginMode ? 'none' : 'block';
+            document.getElementById('statusText').innerText = isLoginMode ? 'Очікування підключення...' : 'Генерація нового ключа...';
+        }
+
+        // РЕАЛЬНА ЛОГІКА ВХОДУ
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            document.getElementById('statusText').innerText = "[ SYS_LOGGING_IN... ]";
+            
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (res.ok) {
+                window.location.href = '/board';
+            } else {
+                document.getElementById('statusText').innerText = "[ ERR: WRONG_CREDS ]";
+                alert("Невірний логін або пароль!");
+            }
+        }
+
+        // РЕАЛЬНА ЛОГІКА РЕЄСТРАЦІЇ
+        async function handleRegister() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            document.getElementById('statusText').innerText = "[ SYS_REGISTERING... ]";
+
+            const res = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password, role: "User" })
+            });
+
+            if (res.ok) {
+                alert("SUCCESS: ACCOUNT_CREATED");
+                toggleMode();
+            } else {
+                document.getElementById('statusText').innerText = "[ ERR: REG_FAILED ]";
+                alert("Помилка реєстрації. Можливо, логін вже зайнятий.");
+            }
+        }
+    </script>
+</body>
+</html>

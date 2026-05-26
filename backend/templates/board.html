@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeamTasker Pro — OS Board v1.0</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-deep: #000000;       
+            --bg-panel: rgba(10, 10, 10, 0.8); 
+            --bg-card: #0a0a0a;       
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-color: #1a1a1a;  
+            --accent-red: #ff0000;    
+            --tech-font: 'Space Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--tech-font); }
+        
+        body { background-color: var(--bg-deep); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
+
+        .sidebar { width: 240px; background-color: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; backdrop-filter: blur(10px); }
+        .logo { padding: 0 20px; font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 40px; text-transform: uppercase; letter-spacing: -1px; }
+        .logo span { color: var(--accent-red); }
+        .logo a { text-decoration: none; color: white; }
+        .nav-link { padding: 15px 20px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.1s; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; border-left: 3px solid transparent; }
+        .nav-link:hover { color: var(--text-main); background-color: rgba(255, 255, 255, 0.03); }
+        .nav-link.active { background-color: rgba(255, 255, 255, 0.05); color: var(--text-main); border-left-color: var(--text-main); }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; position: relative; }
+        
+        .board-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .board-title { text-transform: uppercase; font-size: 1.2rem; }
+        .board-meta { color: var(--text-muted); font-size: 0.8rem; }
+
+        .top-dashboard { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .widget { background-color: var(--bg-card); border: 1px solid var(--border-color); padding: 15px; flex: 1; min-width: 200px; }
+        .widget h3 { text-transform: uppercase; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
+        .widget-val { font-size: 1.8rem; font-weight: 400; color: white; }
+        .progress-container { width: 100%; height: 2px; background: var(--border-color); margin-top: 15px; }
+        .progress-bar { height: 100%; background: white; transition: width 0.3s; }
+
+        .create-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: center;}
+        .create-form input, .create-form select { background-color: var(--bg-deep); border: 1px solid var(--border-color); color: white; padding: 10px; font-size: 0.8rem; outline: none; }
+        .create-form input:focus, .create-form select:focus { border-color: var(--text-muted); }
+        .btn-tech { background-color: white; color: black; border: 1px solid white; padding: 10px 20px; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; transition: 0.1s; }
+        .btn-tech:hover { background-color: black; color: white; }
+
+        .kanban-board { display: flex; gap: 15px; flex: 1; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
+        .column { background-color: var(--bg-panel); border: 1px solid var(--border-color); min-width: 280px; width: 280px; display: flex; flex-direction: column; max-height: 100%; }
+        .column-header { padding: 15px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--border-color); text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; }
+        .column-count { color: var(--border-color); }
+        .column-content { padding: 10px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+
+        .task-card { background-color: var(--bg-card); border: 1px solid var(--border-color); padding: 15px; cursor: grab; transition: 0.1s; position: relative; }
+        .task-card:hover { border-color: #333333; }
+        .task-card:active { cursor: grabbing; opacity: 0.5; }
+        
+        .task-header-wrap { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .task-title { font-size: 0.85rem; color: white; line-height: 1.4; text-transform: uppercase; padding-right: 10px;}
+        
+        .action-btns { display: flex; gap: 5px; }
+        .icon-btn { background: none; border: none; color: var(--border-color); font-size: 1.1rem; cursor: pointer; transition: 0.1s; padding: 0 2px; }
+        .icon-btn:hover { color: white; transform: scale(1.1); }
+        .icon-btn.delete:hover { color: var(--accent-red); }
+
+        .task-desc { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; }
+        .task-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 10px;}
+        .tag { color: var(--text-muted); border: 1px solid var(--border-color); padding: 2px 6px; font-size: 0.7rem; text-transform: uppercase; }
+        .priority-badge { font-size: 0.7rem; text-transform: uppercase; }
+        .priority-high { color: var(--accent-red); font-weight: 700;}
+        .priority-low { color: #333333; }
+        .priority-medium { color: var(--text-muted); }
+
+        /* МОДАЛЬНЕ ВІКНО РЕДАГУВАННЯ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--text-muted); padding: 30px; width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+        .modal-box h2 { text-transform: uppercase; font-size: 1.2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
+        .modal-box input, .modal-box textarea, .modal-box select { width: 100%; background: var(--bg-deep); border: 1px solid var(--border-color); color: white; padding: 10px; outline: none; resize: vertical; }
+        .modal-box input:focus, .modal-box textarea:focus, .modal-box select:focus { border-color: var(--text-muted); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+        .btn-cancel { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
+        .btn-cancel:hover { color: white; border-color: white; }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo"><a href="/">TeamTasker<span>.</span>Pro</a></div>
+        <a class="nav-link active">OS_Board</a>
+        <a class="nav-link">Team_OS</a>
+        <a class="nav-link">Reports_bin</a>
+        <a class="nav-link">Sys_Settings</a>
+    </div>
+
+    <div class="main-content">
+        <div class="board-header">
+            <h1 class="board-title">Проект_Orion / Дошка_задач</h1>
+            <div class="board-meta">user_admin // type: agile_board // v1.0.0_OS</div>
+        </div>
+
+        <div class="top-dashboard">
+            <div class="widget">
+                <h3>Прогрес Спринту</h3>
+                <div class="widget-val">{{ progress }}%</div>
+                <div class="progress-container"><div class="progress-bar" style="width: {{ progress }}%;"></div></div>
+            </div>
+            <div class="widget" style="flex: 2;">
+                <h3>Статус завдань // Tasks_bin</h3>
+                <div style="display: flex; gap: 30px; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem;">
+                    <div><span class="widget-val" style="font-size: 1.5rem;">{{ todo }}</span> <span style="color: var(--text-muted)">New</span></div>
+                    <div><span class="widget-val" style="font-size: 1.5rem;">{{ in_progress }}</span> <span style="color: var(--text-muted)">In_Progress</span></div>
+                    <div><span class="widget-val" style="font-size: 1.5rem;">{{ done }}</span> <span style="color: var(--text-muted)">Done</span></div>
+                </div>
+            </div>
+            
+            <div class="widget" style="flex: 2;">
+                <h3>Додати_задачу -></h3>
+                <div class="create-form">
+                    <input type="text" id="titleInput" placeholder="NAME_..." required>
+                    <input type="text" id="descInput" placeholder="DESC_...">
+                    <select id="tagInput">
+                        <option value="Dev">Dev</option>
+                        <option value="API">API</option>
+                        <option value="QA">QA</option>
+                        <option value="UI">UI</option>
+                    </select>
+                    <select id="priorityInput">
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Low">Low</option>
+                    </select>
+                    <button class="btn-tech" onclick="createTask()">[Створити]</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="kanban-board">
+            {% macro render_task(task) %}
+            <div class="task-card" draggable="true" ondragstart="drag(event)" id="task-{{ task.id }}">
+                <div class="task-header-wrap">
+                    <div class="task-title">{{ task.title }}</div>
+                    <div class="action-btns">
+                        <button class="icon-btn" onclick="openEditModal({{ task.id }}, '{{ task.title | replace("'", "\\'") }}', '{{ task.description | replace("'", "\\'") }}', '{{ task.tag }}', '{{ task.priority }}')" title="Редагувати">✎</button>
+                        <button class="icon-btn delete" onclick="deleteTask({{ task.id }})" title="Видалити">×</button>
+                    </div>
+                </div>
+                <div class="task-desc">{{ task.description }}</div>
+                <div class="task-footer">
+                    <span class="tag">#{{ task.tag }}</span>
+                    <span class="priority-badge {% if task.priority == 'High' %}priority-high{% elif task.priority == 'Low' %}priority-low{% else %}priority-medium{% endif %}">
+                        //{{ task.priority }}
+                    </span>
+                </div>
+            </div>
+            {% endmacro %}
+
+            <div class="column">
+                <div class="column-header">01 // Backlog <span class="column-count">/{{ tasks | selectattr('status', 'equalto', 'New') | list | length }}</span></div>
+                <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)" data-status="New">
+                    {% for task in tasks %}{% if task.status == 'New' %}{{ render_task(task) }}{% endif %}{% endfor %}
+                </div>
+            </div>
+            <div class="column">
+                <div class="column-header">02 // To_Do <span class="column-count">/{{ tasks | selectattr('status', 'equalto', 'To Do') | list | length }}</span></div>
+                <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)" data-status="To Do">
+                    {% for task in tasks %}{% if task.status == 'To Do' %}{{ render_task(task) }}{% endif %}{% endfor %}
+                </div>
+            </div>
+            <div class="column">
+                <div class="column-header">03 // In_Progress <span class="column-count">/{{ tasks | selectattr('status', 'equalto', 'In Progress') | list | length }}</span></div>
+                <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)" data-status="In Progress">
+                    {% for task in tasks %}{% if task.status == 'In Progress' %}{{ render_task(task) }}{% endif %}{% endfor %}
+                </div>
+            </div>
+            <div class="column">
+                <div class="column-header">04 // Testing <span class="column-count">/{{ tasks | selectattr('status', 'equalto', 'Testing') | list | length }}</span></div>
+                <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)" data-status="Testing">
+                    {% for task in tasks %}{% if task.status == 'Testing' %}{{ render_task(task) }}{% endif %}{% endfor %}
+                </div>
+            </div>
+            <div class="column">
+                <div class="column-header">05 // Done <span class="column-count">/{{ tasks | selectattr('status', 'equalto', 'Done') | list | length }}</span></div>
+                <div class="column-content" ondrop="drop(event)" ondragover="allowDrop(event)" data-status="Done">
+                    {% for task in tasks %}{% if task.status == 'Done' %}{{ render_task(task) }}{% endif %}{% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Редагувати задачу</h2>
+            <input type="hidden" id="editTaskId">
+            <input type="text" id="editTitle" placeholder="NAME_..." required>
+            <textarea id="editDesc" rows="3" placeholder="DESC_..."></textarea>
+            
+            <select id="editTag">
+                <option value="Dev">Dev</option>
+                <option value="API">API</option>
+                <option value="QA">QA</option>
+                <option value="UI">UI</option>
+            </select>
+            
+            <select id="editPriority">
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Low">Low</option>
+            </select>
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeEditModal()">Скасувати</button>
+                <button class="btn-tech" onclick="submitEdit()">[Зберегти]</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function createTask() {
+            const title = document.getElementById('titleInput').value;
+            const desc = document.getElementById('descInput').value;
+            const tag = document.getElementById('tagInput').value;
+            const priority = document.getElementById('priorityInput').value;
+            
+            if (!title) return alert("SYS_ERR: NAME_REQ");
+
+            const response = await fetch('/tasks/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, description: desc, status: "New", priority: priority, tag: tag })
+            });
+            if (response.ok) window.location.reload();
+        }
+
+        async function deleteTask(taskId) {
+            if(confirm("CONFIRM_ACTION: DELETE_TASK #"+taskId)) {
+                const response = await fetch(`/tasks/${taskId}`, { method: 'DELETE' });
+                if (response.ok) window.location.reload();
+            }
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+
+        async function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const card = document.getElementById(data);
+            
+            let dropZone = ev.target.closest('.column-content'); 
+            if (dropZone) {
+                dropZone.appendChild(card); 
+                const newStatus = dropZone.getAttribute('data-status');
+                const taskId = data.split('-')[1]; 
+                
+                const response = await fetch(`/tasks/${taskId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!response.ok) alert("SYS_ERR: DB_SYNC_FAIL");
+                else window.location.reload();
+            }
+        }
+
+        // ЛОГІКА МОДАЛЬНОГО ВІКНА
+        function openEditModal(id, title, desc, tag, priority) {
+            document.getElementById('editTaskId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editDesc').value = desc === 'None' ? '' : desc;
+            document.getElementById('editTag').value = tag;
+            document.getElementById('editPriority').value = priority;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        async function submitEdit() {
+            const taskId = document.getElementById('editTaskId').value;
+            const title = document.getElementById('editTitle').value;
+            const desc = document.getElementById('editDesc').value;
+            const tag = document.getElementById('editTag').value;
+            const priority = document.getElementById('editPriority').value;
+
+            if (!title) return alert("SYS_ERR: NAME_REQ");
+
+            const response = await fetch(`/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title, description: desc, status: "New", priority: priority, tag: tag })
+            });
+
+            if (response.ok) {
+                closeEditModal();
+                window.location.reload();
+            } else {
+                alert("SYS_ERR: UPDATE_FAIL");
+            }
+        }
+    </script>
+</body>
+</html>
