@@ -27,6 +27,9 @@ class User(Base):
     # Проєкти, до яких користувач приєднався як учасник за кодом запрошення
     joined_projects = relationship("Project", secondary=project_members, back_populates="members")
 
+    # НОВЕ: Задачі, призначені на цього користувача (Ти це загубив)
+    tasks = relationship("Task", back_populates="assignee")
+
 class Project(Base):
     __tablename__ = "projects"
     
@@ -53,7 +56,7 @@ class Task(Base):
     description = Column(String, nullable=True)
     status = Column(String, default="New")
     priority = Column(String, default="Medium")
-    tag = Column(String, default="Розробка")
+    tag = Column(String, default="Dev")
     deadline = Column(DateTime, nullable=True)
     
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
@@ -61,3 +64,6 @@ class Task(Base):
     
     # Зв'язки
     project = relationship("Project", back_populates="tasks")
+    
+    # НОВЕ: Зв'язок задачі з виконавцем (Ти це загубив)
+    assignee = relationship("User", back_populates="tasks")

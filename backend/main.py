@@ -103,11 +103,14 @@ def read_board(request: Request, project_id: int = None, db: Session = Depends(g
         active_project_id = active_project.id
         active_project_name = active_project.title
         invite_code = active_project.invite_code
+        # НОВЕ: Збираємо всіх учасників проєкту для випадаючого списку
+        team_members = [active_project.owner] + list(active_project.members)
     else:
         all_tasks = []
         active_project_id = None
         active_project_name = "NO_WORKSPACE_FOUND"
         invite_code = "N/A"
+        team_members = []
 
     total = len(all_tasks)
     todo_count = sum(1 for t in all_tasks if t.status in ['New', 'To Do'])
@@ -121,7 +124,7 @@ def read_board(request: Request, project_id: int = None, db: Session = Depends(g
             "in_progress": in_progress_count, "done": done_count, "progress": progress,
             "current_user": current_user.username, "user_projects": user_projects, 
             "active_project_id": active_project_id, "active_project_name": active_project_name, 
-            "invite_code": invite_code
+            "invite_code": invite_code, "team_members": team_members # ПЕРЕДАЄМО КОМАНДУ
         }
     )
 

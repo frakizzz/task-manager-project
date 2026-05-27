@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeamTasker Pro — OS Board v2.1</title>
+    <title>TeamTasker Pro — OS Board v2.2</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
@@ -119,7 +119,8 @@
         .task-desc { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; }
         
         .task-meta { font-size: 0.7rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
-        .task-assignee { color: var(--text-main); }
+        .task-assignee { color: var(--text-main); font-weight: 700; }
+        .task-assignee.unassigned { color: var(--text-muted); font-weight: 400;}
 
         .task-footer { display: flex; justify-content: space-between; align-items: center; }
         .tag { color: var(--text-main); border: 1px solid var(--border-color); padding: 2px 6px; font-size: 0.65rem; text-transform: uppercase; }
@@ -190,6 +191,22 @@
                 <h3>// Task_Injector</h3>
                 <div class="form-row">
                     <input type="text" id="titleInput" class="input-tech" placeholder="TASK_NAME..." required autocomplete="off">
+                    
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select" onclick="toggleSelect('assigneeDropdown')"><span id="assigneeDisplay">USER: AUTO</span> ▾</div>
+                        <div class="custom-options" id="assigneeDropdown">
+                            <div class="custom-option" onclick="selectOption('assignee', '', 'USER: AUTO')">UNASSIGNED</div>
+                            {% for member in team_members %}
+                            <div class="custom-option" onclick="selectOption('assignee', '{{ member.id }}', 'USER: {{ member.username | upper }}')">{{ member.username | upper }}</div>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" id="assigneeInput" value="">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <input type="text" id="descInput" class="input-tech" placeholder="DESCRIPTION..." autocomplete="off">
+                    
                     <div class="custom-select-wrapper">
                         <div class="custom-select" onclick="toggleSelect('tagDropdown')"><span id="tagDisplay">TAG: DEV</span> ▾</div>
                         <div class="custom-options" id="tagDropdown">
@@ -200,10 +217,7 @@
                         </div>
                         <input type="hidden" id="tagInput" value="Dev">
                     </div>
-                </div>
-                
-                <div class="form-row">
-                    <input type="text" id="descInput" class="input-tech" placeholder="DESCRIPTION..." autocomplete="off">
+
                     <div class="custom-select-wrapper">
                         <div class="custom-select" onclick="toggleSelect('priorityDropdown')"><span id="priorityDisplay">PRI: MED</span> ▾</div>
                         <div class="custom-options" id="priorityDropdown">
@@ -236,13 +250,17 @@
                 <div class="task-header-wrap">
                     <div class="task-title">{{ task.title }}</div>
                     <div class="action-btns">
-                        <button class="icon-btn" onclick="openEditModal({{ task.id }}, '{{ task.title | replace("'", "\\'") }}', '{{ task.description | replace("'", "\\'") }}', '{{ task.tag }}', '{{ task.priority }}')" title="Edit">[E]</button>
+                        <button class="icon-btn" onclick="openEditModal({{ task.id }}, '{{ task.title | replace("'", "\\'") }}', '{{ task.description | replace("'", "\\'") }}', '{{ task.tag }}', '{{ task.priority }}', '{{ task.assignee_id if task.assignee_id else '' }}', '{{ task.assignee.username | upper if task.assignee else 'AUTO' }}')" title="Edit">[E]</button>
                         <button class="icon-btn delete" onclick="deleteTask({{ task.id }})" title="Delete">[X]</button>
                     </div>
                 </div>
                 <div class="task-meta">
                     <span>ID: #00{{ task.id }}</span>
-                    <span class="task-assignee">[ USER: UNASSIGNED ]</span>
+                    {% if task.assignee %}
+                        <span class="task-assignee">[ USER: {{ task.assignee.username | upper }} ]</span>
+                    {% else %}
+                        <span class="task-assignee unassigned">[ USER: UNASSIGNED ]</span>
+                    {% endif %}
                 </div>
                 <div class="task-desc">{{ task.description }}</div>
                 <div class="task-footer">
@@ -295,6 +313,17 @@
             <textarea id="editDesc" class="input-tech" rows="3" placeholder="DESCRIPTION..." style="resize: none;"></textarea>
             
             <div style="display: flex; gap: 10px;">
+                <div class="custom-select-wrapper" style="flex: 1;">
+                    <div class="custom-select" onclick="toggleSelect('editAssigneeDropdown')"><span id="editAssigneeDisplay">USER: AUTO</span> ▾</div>
+                    <div class="custom-options" id="editAssigneeDropdown">
+                        <div class="custom-option" onclick="selectOption('editAssignee', '', 'USER: AUTO')">UNASSIGNED</div>
+                        {% for member in team_members %}
+                        <div class="custom-option" onclick="selectOption('editAssignee', '{{ member.id }}', 'USER: {{ member.username | upper }}')">{{ member.username | upper }}</div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="editAssignee" value="">
+                </div>
+                
                 <div class="custom-select-wrapper" style="flex: 1;">
                     <div class="custom-select" onclick="toggleSelect('editTagDropdown')"><span id="editTagDisplay">TAG: DEV</span> ▾</div>
                     <div class="custom-options" id="editTagDropdown">
@@ -398,20 +427,27 @@
             const desc = document.getElementById('descInput').value;
             const tag = document.getElementById('tagInput').value;
             const priority = document.getElementById('priorityInput').value;
+            const assigneeIdStr = document.getElementById('assigneeInput').value; // НОВЕ
             
             if (!title) return alert("SYS_ERR: TASK_NAME_REQ");
+
+            const payload = { 
+                title: title, 
+                description: desc, 
+                status: "New", 
+                priority: priority, 
+                tag: tag,
+                project_id: activeProjectId
+            };
+            
+            if (assigneeIdStr !== "") {
+                payload.assignee_id = parseInt(assigneeIdStr);
+            }
 
             const response = await fetch('/tasks/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    title: title, 
-                    description: desc, 
-                    status: "New", 
-                    priority: priority, 
-                    tag: tag,
-                    project_id: activeProjectId
-                })
+                body: JSON.stringify(payload)
             });
             if (response.ok) window.location.reload();
         }
@@ -448,13 +484,14 @@
             }
         }
 
-        function openEditModal(id, title, desc, tag, priority) {
+        function openEditModal(id, title, desc, tag, priority, assigneeId, assigneeName) {
             document.getElementById('editTaskId').value = id;
             document.getElementById('editTitle').value = title;
             document.getElementById('editDesc').value = desc === 'None' ? '' : desc;
             
             selectOption('editTag', tag, 'TAG: ' + tag.toUpperCase());
             selectOption('editPriority', priority, 'PRI: ' + (priority==='Medium'?'MED':priority.toUpperCase()));
+            selectOption('editAssignee', assigneeId, 'USER: ' + assigneeName); // НОВЕ
             
             document.getElementById('editModal').classList.add('show');
         }
@@ -469,20 +506,27 @@
             const desc = document.getElementById('editDesc').value;
             const tag = document.getElementById('editTag').value;
             const priority = document.getElementById('editPriority').value;
+            const assigneeIdStr = document.getElementById('editAssignee').value; // НОВЕ
 
             if (!title) return alert("SYS_ERR: TASK_NAME_REQ");
+
+            const payload = { 
+                title: title, 
+                description: desc, 
+                status: "New", 
+                priority: priority, 
+                tag: tag,
+                project_id: activeProjectId
+            };
+            
+            if (assigneeIdStr !== "") {
+                payload.assignee_id = parseInt(assigneeIdStr);
+            }
 
             const response = await fetch(`/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    title: title, 
-                    description: desc, 
-                    status: "New", 
-                    priority: priority, 
-                    tag: tag,
-                    project_id: activeProjectId
-                })
+                body: JSON.stringify(payload)
             });
 
             if (response.ok) {

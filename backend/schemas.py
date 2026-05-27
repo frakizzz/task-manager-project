@@ -10,11 +10,12 @@ class TaskBase(BaseModel):
     description: Optional[str] = None
     status: str = "New"
     priority: str = "Medium"
-    tag: str = "Розробка"
+    tag: str = "Dev"
     deadline: Optional[datetime] = None
 
 class TaskCreate(TaskBase):
     project_id: Optional[int] = None
+    assignee_id: Optional[int] = None  # НОВЕ: Дозволяємо передавати виконавця при створенні
 
 class TaskUpdateStatus(BaseModel):
     status: str

@@ -104,7 +104,8 @@ def create_task(db: Session, task: schemas.TaskCreate):
         priority=task.priority,
         tag=task.tag,
         deadline=task.deadline,
-        project_id=task.project_id
+        project_id=task.project_id,
+        assignee_id=task.assignee_id # НОВЕ: Зберігаємо виконавця
     )
     db.add(db_task)
     db.commit()
@@ -127,6 +128,7 @@ def update_task_details(db: Session, task_id: int, task_data: schemas.TaskCreate
         db_task.priority = task_data.priority
         db_task.tag = task_data.tag
         db_task.project_id = task_data.project_id
+        db_task.assignee_id = task_data.assignee_id # НОВЕ: Оновлюємо виконавця
         db.commit()
         db.refresh(db_task)
     return db_task
