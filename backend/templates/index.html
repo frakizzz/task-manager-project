@@ -3,192 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tasker_OS // INITIALIZE</title>
+    <title>Tasker_OS // IMMERSIVE_EDITION</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
 
         :root {
             --bg-deep: #000000;       
-            --bg-card: #0a0a0a;       
             --text-main: #ffffff;
             --text-muted: #555555;
-            --border-color: #222222;  
             --accent-red: #ff0000;    
             --tech-font: 'Space Mono', monospace;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--tech-font); }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--tech-font); cursor: crosshair; }
+        
         body { 
             background-color: var(--bg-deep); 
             color: var(--text-main); 
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-image: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
             overflow-x: hidden;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            perspective: 1000px;
         }
 
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 50; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .dot-grid {
+            position: fixed;
+            top: -5%; left: -5%; width: 110vw; height: 110vh;
+            background-image: radial-gradient(circle, #333 1px, transparent 1px);
+            background-size: 24px 24px;
+            z-index: 0;
+            opacity: 0.4;
+            transition: transform 0.1s ease-out;
+        }
+
+        .cursor-glow {
+            position: fixed;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 60%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .cam-corners {
+            position: fixed; top: 20px; left: 20px; right: 20px; bottom: 20px;
+            pointer-events: none; z-index: 100;
+        }
+        .cam-corners::before, .cam-corners::after {
+            content: ''; position: absolute; width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.2);
+        }
+        .cam-corners::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .cam-corners::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+
         nav {
+            position: relative;
+            z-index: 10;
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 30px 50px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
         }
 
-        .logo { font-size: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: -1px; }
-        .logo span { color: var(--accent-red); animation: blink 1.5s infinite; }
+        .logo { font-size: 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: -2px; }
+        .logo span { color: var(--accent-red); animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            margin-left: 30px;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            transition: 0.2s;
-        }
-        .nav-links a:hover { color: var(--text-main); }
-
         .hero {
-            flex: 1;
+            height: 100vh;
+            position: relative;
+            z-index: 10;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: flex-start;
-            padding: 0 10vw;
+            padding: 0 50px;
+            transform-style: preserve-3d;
+            margin-top: -90px;
+        }
+
+        .huge-text {
+            font-size: clamp(4rem, 10vw, 12rem);
+            font-weight: 700;
+            line-height: 0.85;
+            text-transform: uppercase;
+            letter-spacing: -5px;
+            display: flex;
+            flex-direction: column;
             position: relative;
         }
 
-        .sys-status {
-            color: var(--accent-red);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .sys-status::before {
-            content: ''; display: block; width: 8px; height: 8px; background-color: var(--accent-red);
+        .huge-text .word { display: block; transition: transform 0.1s ease-out; }
+        .huge-text .solid { color: var(--text-main); }
+        .huge-text .outline { 
+            color: transparent; 
+            -webkit-text-stroke: 2px var(--text-main); 
+            animation: glitch 4s infinite;
         }
 
-        .typewriter h1 {
-            font-size: 4.5rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 20px;
-            letter-spacing: -2px;
-            overflow: hidden; 
-            border-right: .15em solid var(--text-main); 
-            white-space: nowrap; 
-            animation: typing 2s steps(30, end), blink-caret .75s step-end infinite;
+        @keyframes glitch {
+            0%, 96%, 98%, 100% { opacity: 1; transform: skewX(0deg); filter: drop-shadow(0 0 0 rgba(255,0,0,0)); }
+            97% { opacity: 0.8; transform: skewX(10deg); filter: drop-shadow(5px 0 0 rgba(255,0,0,0.8)); }
+            99% { opacity: 0.9; transform: skewX(-10deg); filter: drop-shadow(-5px 0 0 rgba(0,255,255,0.8)); }
         }
-
-        @keyframes typing { from { width: 0 } to { width: 100% } }
-        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--text-main); } }
 
         .hero-desc {
-            max-width: 600px;
-            color: var(--text-muted);
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 40px;
+            margin-top: 30px;
+            color: var(--accent-red);
+            font-size: 1.1rem;
+            max-width: 450px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-height: 40px;
         }
 
-        .btn-tech {
-            background-color: var(--text-main);
-            color: var(--bg-deep);
-            border: none;
-            padding: 15px 30px;
-            font-size: 1rem;
+        .action-area {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            position: relative;
+            z-index: 20;
+        }
+
+        .btn {
+            display: inline-block;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            color: var(--text-main);
+            border: 1px solid var(--text-muted);
+            padding: 15px 40px;
+            font-size: 0.9rem;
             font-weight: 700;
             text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.2s;
             text-decoration: none;
-            display: inline-block;
-        }
-        .btn-tech:hover {
-            background-color: var(--accent-red);
-            color: white;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .features {
+        .btn:hover { background: var(--text-main); color: var(--bg-deep); border-color: var(--text-main); }
+        .btn.accent { color: var(--accent-red); border-color: var(--accent-red); }
+        .btn.accent:hover { 
+            background: var(--accent-red); 
+            color: var(--text-main); 
+            border-color: var(--accent-red); 
+            box-shadow: 0 0 30px rgba(255,0,0,0.5);
+            letter-spacing: 2px;
+        }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .scroll-line {
+            width: 50px;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-red), transparent);
+            animation: stretch 2s infinite;
+        }
+        @keyframes stretch {
+            0% { width: 0; opacity: 0; }
+            50% { width: 50px; opacity: 1; }
+            100% { width: 0; opacity: 0; transform: translateX(50px); }
+        }
+
+        .ticker-wrap {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--text-main);
+            color: var(--bg-deep);
+            padding: 12px 0;
+        }
+
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 100%;
+            box-sizing: content-box;
+            animation: ticker 15s linear infinite;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        .ticker span { margin-right: 50px; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        .features-section {
+            position: relative;
+            z-index: 10;
+            padding: 100px 50px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            color: var(--accent-red);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .section-title::after { content: ''; display: block; height: 1px; flex: 1; background: var(--border-color); }
+
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1px;
-            background-color: var(--border-color);
-            border-top: 1px solid var(--border-color);
+            gap: 30px;
         }
 
         .feature-card {
-            background-color: var(--bg-card);
-            padding: 40px;
+            border: 1px solid var(--border-color);
+            padding: 40px 30px;
+            background: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
             position: relative;
         }
-        
-        .feature-card::before {
-            content: ''; position: absolute; top: 20px; left: 20px; width: 15px; height: 15px; 
-            border-top: 2px solid var(--text-muted); border-left: 2px solid var(--text-muted);
+        .feature-card::before { 
+            content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px; 
+            border-top: 1px solid var(--text-main); border-left: 1px solid var(--text-main); transition: 0.3s;
+        }
+        .feature-card:hover { border-color: var(--text-muted); transform: translateY(-5px); background: rgba(10, 10, 10, 0.9); }
+        .feature-card:hover::before { border-color: var(--accent-red); width: 20px; height: 20px; }
+
+        .feature-card h3 { font-size: 1.2rem; text-transform: uppercase; margin-bottom: 15px; color: var(--text-main); letter-spacing: -0.5px;}
+        .feature-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+        .feature-number { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; font-weight: 700; color: var(--border-color); }
+
+        footer {
+            position: relative;
+            z-index: 10;
+            padding: 40px 50px;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
         }
 
-        .feature-num { color: var(--accent-red); font-size: 0.8rem; margin-bottom: 15px; }
-        .feature-title { font-size: 1.2rem; text-transform: uppercase; font-weight: 700; margin-bottom: 15px; }
-        .feature-desc { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
+        .copyright { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+        .github-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            transition: 0.2s;
+        }
+        .github-link:hover {
+            background: var(--text-main);
+            color: var(--bg-deep);
+        }
 
     </style>
 </head>
 <body>
 
+    <div class="noise-overlay"></div>
+    <div class="dot-grid" id="dotGrid"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+    <div class="cam-corners"></div>
+
     <nav>
         <div class="logo">Tasker<span>_</span>OS</div>
-        <div class="nav-links">
-            <a href="https://github.com" target="_blank">DOCS</a>
-            {% if current_user %}
-                <a href="/hub" style="color: var(--accent-red); font-weight: 700;">[ ENTER_HUB ]</a>
-            {% else %}
-                <a href="/login" style="color: var(--text-main); font-weight: 700; border-bottom: 1px solid var(--text-main); padding-bottom: 2px;">[ SYS_LOGIN ]</a>
-            {% endif %}
-        </div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;" id="sysTime">Build // 4.0.0</div>
     </nav>
 
-    <div class="hero">
-        <div class="sys-status">System Online // v2.1.0</div>
-        <div class="typewriter">
-            <h1>Hybrid<br>Workspace<br>Engine.</h1>
+    <section class="hero">
+        <div class="huge-text" id="parallaxContainer">
+            <div class="word solid" data-value="-20">CONTROL.</div>
+            <div class="word outline" data-value="30">EXECUTE.</div>
+            <div class="word solid" data-value="-10">DOMINATE.</div>
         </div>
-        <p class="hero-desc">
-            Професійне середовище для управління проєктами. Поєднує гнучкість Канбан-дошок зі строгістю навчальних та інженерних хабів. Жодних зайвих деталей. Тільки чиста продуктивність.
-        </p>
-        {% if current_user %}
-            <a href="/hub" class="btn-tech">[ RESUME_SESSION ]</a>
-        {% else %}
-            <a href="/login" class="btn-tech">[ INITIALIZE_SESSION ]</a>
-        {% endif %}
+        
+        <div class="hero-desc" id="hackerText" data-target="A brutalist workspace for high-performing teams. No distractions.">
+            _
+        </div>
+
+        <div class="action-area">
+            {% if current_user %}
+                <a href="/hub" class="btn accent">[ ENTER_WORKSPACE ]</a>
+                <a href="/logout" class="btn">[ DISCONNECT ]</a>
+            {% else %}
+                <a href="/login" class="btn accent">[ AUTHENTICATE ]</a>
+            {% endif %}
+        </div>
+
+        <div class="scroll-down">
+            <span>SCROLL_DOWN</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <div class="ticker-wrap">
+        <div class="ticker">
+            <span>// KANBAN_CORE_ACTIVE</span>
+            <span>// ENCRYPTED_WORKSPACES</span>
+            <span>// REALTIME_AUDIT_LOGS</span>
+            <span>// MARKDOWN_INJECTION</span>
+            <span>// ZERO_DISTRACTIONS</span>
+            <span>// KANBAN_CORE_ACTIVE</span>
+            <span>// ENCRYPTED_WORKSPACES</span>
+            <span>// REALTIME_AUDIT_LOGS</span>
+        </div>
     </div>
 
-    <div class="features">
-        <div class="feature-card">
-            <div class="feature-num">01 // ARCHITECTURE</div>
-            <div class="feature-title">Ізольовані Хаби</div>
-            <div class="feature-desc">Створюйте окремі простори для кожного проєкту. Доступ лише за унікальними інвайт-кодами. Повна конфіденційність даних вашої команди.</div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-num">02 // WORKFLOW</div>
-            <div class="feature-title">Agile Board</div>
-            <div class="feature-desc">Керуйте задачами за допомогою системи Drag & Drop. Змінюйте пріоритети, теги та статуси в режимі реального часу без перезавантаження.</div>
-        </div>
-        <div class="feature-card">
-            <div class="feature-num">03 // DESIGN</div>
-            <div class="feature-title">Брутальний UX</div>
-            <div class="feature-desc">Максимальна концентрація на задачах завдяки мінімалістичному термінальному інтерфейсу. Темна тема береже очі під час нічних компіляцій.</div>
-        </div>
-    </div>
+    <section class="features-section">
+        <div class="section-title">// SYSTEM_CAPABILITIES</div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-number">01</div>
+                <h3>Isolated Workspaces</h3>
+                <p>Керуйте кількома проєктами одночасно. Доступ до дощок здійснюється виключно через унікальні криптографічні інвайт-коди.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-number">02</div>
+                <h3>Kanban Engine</h3>
+                <p>Брутальний Drag & Drop інтерфейс для задач. Розумні фільтри, візуальні маркери дедлайнів та автоматичний підрахунок метрик спринту.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-number">03</div>
+                <h3>Markdown & Media</h3>
+                <p>Повна підтримка Markdown у кожній задачі. Ін'єкція зображень, відео та документації прямо у ваш робочий простір.</p>
+            </div>
 
+            <div class="feature-card">
+                <div class="feature-number">04</div>
+                <h3>System Audit Logs</h3>
+                <p>Вбудована "чорна скринька". Кожне створення, переміщення або видалення задачі фіксується у терміналі логів у реальному часі.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="copyright">© 2026 Tasker_OS. All rights reserved.</div>
+        
+        <a href="https://github.com/frakizzz" target="_blank" class="github-link">[ GITHUB ]</a>
+    </footer>
+
+    <script>
+        const glow = document.getElementById('cursorGlow');
+        const grid = document.getElementById('dotGrid');
+        const words = document.querySelectorAll('.word');
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            glow.style.left = mouseX + 'px';
+            glow.style.top = mouseY + 'px';
+
+            const moveX = (mouseX - windowWidth / 2) / (windowWidth / 2);
+            const moveY = (mouseY - windowHeight / 2) / (windowHeight / 2);
+
+            grid.style.transform = `translate(${moveX * -15}px, ${moveY * -15}px)`;
+
+            words.forEach(word => {
+                const depth = word.getAttribute('data-value');
+                const x = moveX * depth;
+                const y = moveY * depth;
+                word.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            });
+        });
+
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
+        const targetElement = document.getElementById('hackerText');
+        const targetText = targetElement.getAttribute('data-target');
+        
+        let iteration = 0;
+        let interval = null;
+
+        setTimeout(() => {
+            clearInterval(interval);
+            interval = setInterval(() => {
+                targetElement.innerText = targetText.split("").map((letter, index) => {
+                    if(index < iteration) {
+                        return targetText[index];
+                    }
+                    return letters[Math.floor(Math.random() * 42)];
+                }).join("");
+                
+                if(iteration >= targetText.length){ 
+                    clearInterval(interval);
+                }
+                iteration += 1 / 2;
+            }, 30);
+        }, 500);
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('sysTime').innerText = "SYS_TIME // " + now.toTimeString().split(' ')[0] + " UTC";
+        }, 1000);
+    </script>
 </body>
 </html>

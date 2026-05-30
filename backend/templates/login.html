@@ -119,7 +119,6 @@
             document.getElementById('statusText').innerText = isLoginMode ? 'Очікування підключення...' : 'Генерація нового ключа...';
         }
 
-        // РЕАЛЬНА ЛОГІКА ВХОДУ
         async function handleLogin() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
@@ -140,7 +139,6 @@
             }
         }
 
-        // РЕАЛЬНА ЛОГІКА РЕЄСТРАЦІЇ
         async function handleRegister() {
             const username = document.getElementById('regUsername').value;
             const email = document.getElementById('regEmail').value;

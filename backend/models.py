@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
 
-# Проміжна таблиця для зв'язку багатьох до багатьох (Користувачі <-> Проєкти)
 project_members = Table(
     "project_members",
     Base.metadata,
@@ -21,13 +20,8 @@ class User(Base):
     role = Column(String, default="User")
     is_active = Column(Boolean, default=True)
 
-    # Проєкти, якими володіє цей користувач (створив сам)
     owned_projects = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
-    
-    # Проєкти, до яких користувач приєднався як учасник за кодом запрошення
     joined_projects = relationship("Project", secondary=project_members, back_populates="members")
-
-    # НОВЕ: Задачі, призначені на цього користувача (Ти це загубив)
     tasks = relationship("Task", back_populates="assignee")
 
 class Project(Base):
@@ -37,13 +31,9 @@ class Project(Base):
     title = Column(String, index=True)
     description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Код запрошення, як у Google Classroom (унікальний для кожного проєкту)
     invite_code = Column(String, unique=True, index=True, nullable=False)
-    
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     
-    # Зв'язки
     owner = relationship("User", back_populates="owned_projects")
     members = relationship("User", secondary=project_members, back_populates="joined_projects")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
@@ -62,8 +52,46 @@ class Task(Base):
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
     assignee_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     
-    # Зв'язки
     project = relationship("Project", back_populates="tasks")
-    
-    # НОВЕ: Зв'язок задачі з виконавцем (Ти це загубив)
     assignee = relationship("User", back_populates="tasks")
+    attachments = relationship("Attachment", back_populates="task", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="task", cascade="all, delete-orphan")
+
+class Attachment(Base):
+    __tablename__ = "attachments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, index=True)
+    file_path = Column(String)
+    file_type = Column(String) 
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"))
+    task = relationship("Task", back_populates="attachments")
+
+class Comment(Base):
+    __tablename__ = "comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"))
+    author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    
+    task = relationship("Task", back_populates="comments")
+    author = relationship("User")
+
+class Log(Base):
+    __tablename__ = "logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    action = Column(String) 
+    details = Column(String) 
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    
+    project = relationship("Project")
+    user = relationship("User")

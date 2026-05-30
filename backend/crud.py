@@ -4,10 +4,6 @@ import uuid
 import models
 import schemas
 
-# ==========================================
-# 1. ЛОГІКА ДЛЯ КОРИСТУВАЧІВ (Users)
-# ==========================================
-
 def get_user_by_username(db: Session, username: str):
     return db.query(models.User).filter(models.User.username == username).first()
 
@@ -29,10 +25,6 @@ def create_user(db: Session, user: schemas.UserCreate):
 def verify_password(plain_password: str, hashed_password: str):
     pwd_bytes = plain_password.encode('utf-8')[:72]
     return bcrypt.checkpw(pwd_bytes, hashed_password.encode('utf-8'))
-
-# ==========================================
-# 2. ЛОГІКА ДЛЯ ПРОЄКТІВ (Projects)
-# ==========================================
 
 def create_project(db: Session, project: schemas.ProjectCreate, owner_id: int):
     unique_code = str(uuid.uuid4()).split('-')[0].upper()
@@ -71,7 +63,6 @@ def get_user_projects(db: Session, user_id: int):
     return list(user.owned_projects) + list(user.joined_projects)
 
 def delete_project(db: Session, project_id: int, user_id: int):
-    # Видалити проєкт може ТІЛЬКИ його власник
     project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.owner_id == user_id).first()
     if project:
         db.delete(project)
@@ -80,7 +71,6 @@ def delete_project(db: Session, project_id: int, user_id: int):
     return False
 
 def leave_project(db: Session, project_id: int, user_id: int):
-    # Вийти з проєкту може тільки учасник (не власник)
     project = db.query(models.Project).filter(models.Project.id == project_id).first()
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if project and user in project.members:
@@ -88,10 +78,6 @@ def leave_project(db: Session, project_id: int, user_id: int):
         db.commit()
         return True
     return False
-
-# ==========================================
-# 3. ЛОГІКА ДЛЯ ЗАДАЧ (Tasks)
-# ==========================================
 
 def get_tasks(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Task).offset(skip).limit(limit).all()
@@ -105,7 +91,7 @@ def create_task(db: Session, task: schemas.TaskCreate):
         tag=task.tag,
         deadline=task.deadline,
         project_id=task.project_id,
-        assignee_id=task.assignee_id # НОВЕ: Зберігаємо виконавця
+        assignee_id=task.assignee_id
     )
     db.add(db_task)
     db.commit()
@@ -128,7 +114,7 @@ def update_task_details(db: Session, task_id: int, task_data: schemas.TaskCreate
         db_task.priority = task_data.priority
         db_task.tag = task_data.tag
         db_task.project_id = task_data.project_id
-        db_task.assignee_id = task_data.assignee_id # НОВЕ: Оновлюємо виконавця
+        db_task.assignee_id = task_data.assignee_id
         db.commit()
         db.refresh(db_task)
     return db_task
